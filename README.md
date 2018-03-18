@@ -12,3 +12,11 @@ The following steps can be followed to run the project:
 2. Follow [`pipenv` documentation](https://github.com/pypa/pipenv) to install `pipenv`.
 3. Run `pipenv install` to install the required dependencies.
 4. Head over to data folder to find instructions to obain the images.
+
+## License
+
+This project is licensed under ##Apache License 2.0##. The terms of the license can be found in [LICENSE](./LICENSE).
+
+## Credits
+
+All the contributions to this project is made by [Aakaash Jois](https://github.com/aakaashjois) and [Keerthi Sravan Ravi](https://github.com/sravan953).
