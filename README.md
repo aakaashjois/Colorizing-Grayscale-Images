@@ -15,7 +15,7 @@ The following steps can be followed to run the project:
 
 ## License
 
-This project is licensed under ##Apache License 2.0##. The terms of the license can be found in [LICENSE](./LICENSE).
+This project is licensed under Apache License 2.0. The terms of the license can be found in [LICENSE](./LICENSE).
 
 ## Credits
 
