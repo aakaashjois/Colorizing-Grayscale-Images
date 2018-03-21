@@ -10,7 +10,8 @@ name = "pypi"
 jupyterlab = "*"
 numpy = "*"
 matplotlib = "*"
-sklearn = "*"
+tqdm = "*"
+scikit-learn = "*"
 
 
 [dev-packages]
