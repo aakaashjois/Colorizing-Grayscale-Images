@@ -13,6 +13,7 @@ matplotlib = "*"
 tqdm = "*"
 scikit-learn = "*"
 pillow = "*"
+tensorflow-gpu = "*"
 
 
 [dev-packages]
