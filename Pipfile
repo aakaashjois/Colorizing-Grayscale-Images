@@ -12,6 +12,7 @@ numpy = "*"
 matplotlib = "*"
 tqdm = "*"
 scikit-learn = "*"
+pillow = "*"
 
 
 [dev-packages]
