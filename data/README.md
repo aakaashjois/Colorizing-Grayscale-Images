@@ -1,3 +1,3 @@
-This project uses [LSUN Datset](http://www.yf.io/p/lsun)'s beedroom category images. The images can be obtained and extracted by following the instructions on [LSUN GitHub page](https://github.com/fyu/lsun). Use `--flat` argument to extract all the images to a single folder.
+This project uses [Microsoft COCO Datset](http://cocodataset.org/#home). This project uses 2017 train, validation and test images. But, any year data should work if retraining the model.
 
-Once the images are extracted, run the provided script to place 10000 randomly picked images in `train`, `validation` and `test` folders.
+The script [preprocess_data.py](./preprocess_data.py) should be run to crop and resize the images.
