@@ -7,3 +7,5 @@ data/validation/*
 code/\.ipynb_checkpoints/
 
 code/events*
+
+code/logs/
