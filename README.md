@@ -1,22 +1,22 @@
-# Unsupervised Fully Automatic Colorization of Grayscale Images using Generative Adversarial Networks
+# Unsupervised Fully Automatic Colorization of Grayscale Images using Generative Adversarial Networks (UFACGIGAN)
 
-Using a DCGAN to generate color images from grayscale images using LSUN Dataset (Bedroom category).
+## WHAT?
+Converting grayscale images to color using a DCGAN
 
-## Setup
+## HOW?
+We model the generator based on the architecture reported by Iizuka et al [\[1\]](#references). For the discriminator, we use the VGG19 model with `categorical_cross_entropy` loss function. We train the generator on Microsoft's COCO dataset [\[2\]](#references).
 
-This project run on Python 3 with Python.org [recommended](https://packaging.python.org/tutorials/managing-dependencies/#managing-dependencies)  dependency manager, [`pipenv`](https://github.com/pypa/pipenv).
+## SETUP
+### INSTALLING DEPENDENCIES
+1. Install Python 3.x
+2. Install [`pipenv`](https://packaging.python.org/tutorials/managing-dependencies/#managing-dependencies)
+3. Clone this repo
+4. `cd` into the repo
+5. Run `pipenv install'
 
-The following steps can be followed to run the project:
-
-1. Clone the project using your favourite Git client
-2. Follow [`pipenv` documentation](https://github.com/pypa/pipenv) to install `pipenv`.
-3. Run `pipenv install` to install the required dependencies.
-4. Head over to data folder to find instructions to obain the images.
-
-## License
-
+## LICENSE
 This project is licensed under Apache License 2.0. The terms of the license can be found in [LICENSE](./LICENSE).
 
-## Credits
-
-All the contributions to this project is made by [Aakaash Jois](https://github.com/aakaashjois) and [Keerthi Sravan Ravi](https://github.com/sravan953).
+## REFERENCES
+1. Iizuka, Satoshi, Edgar Simo-Serra, and Hiroshi Ishikawa. "Let there be color!: joint end-to-end learning of global and local image priors for automatic image colorization with simultaneous classification." ACM Transactions on Graphics (TOG) 35.4 (2016): 110.
+2. Lin, Tsung-Yi, et al. "Microsoft coco: Common objects in context." European conference on computer vision. Springer, Cham, 2014.
