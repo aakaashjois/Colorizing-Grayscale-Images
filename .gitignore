@@ -9,3 +9,5 @@ code/\.ipynb_checkpoints/
 code/events*
 
 code/logs/
+
+\.ipynb_checkpoints/
