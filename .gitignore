@@ -3,11 +3,3 @@ data/test/*
 data/validation/*
 
 \.DS_Store
-
-code/\.ipynb_checkpoints/
-
-code/events*
-
-code/logs/
-
-\.ipynb_checkpoints/

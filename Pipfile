@@ -13,6 +13,8 @@ pillow = "*"
 tensorflow-gpu = "*"
 jupyter-tensorboard = "*"
 tensorlayer = "*"
+tensorflow-hub = "*"
+"h5py" = "*"
 
 [dev-packages]
 
