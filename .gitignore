@@ -5,3 +5,9 @@ data/validation/*
 \.DS_Store
 
 env/
+
+venv/
+
+\.ipynb_checkpoints/
+
+\.idea/
