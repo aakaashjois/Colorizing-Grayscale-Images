@@ -3,3 +3,5 @@ data/test/*
 data/validation/*
 
 \.DS_Store
+
+env/
