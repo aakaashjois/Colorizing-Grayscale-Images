@@ -1,11 +1,16 @@
 import tensorflow as tf
 
 
-BatchNormalization = tf.keras.layers.BatchNormalization
-Conv2D = tf.keras.layers.Conv2D
-UpSampling2D = tf.keras.layers.UpSampling2D
-Add = tf.keras.layers.Add
-Model = tf.keras.models.Model
+keras = tf.keras
+Input = keras.layers.Input
+BatchNormalization = keras.layers.BatchNormalization
+Conv2D = keras.layers.Conv2D
+UpSampling2D = keras.layers.UpSampling2D
+Add = keras.layers.Add
+Model = keras.models.Model
+Dense = keras.layers.Dense
+GlobalAveragePooling2D = keras.layers.GlobalAveragePooling2D
+MaxPooling2D = keras.layers.MaxPool2D
 
 def get_vgg16_model(input_shape, input_layer):
     """Returns a pretrained VGG16 model without the top layers
@@ -76,11 +81,11 @@ def get_generator_model(input_layer, input_shape, train_vgg16_layers=False):
     block12_up = UpSampling2D(size=(2, 2))(block12_add_conv)
     output = Conv2D(filters=3, kernel_size=3, activation='sigmoid', padding='same')(block12_up)
 
-    model =  Model(inputs=input_layer, outputs=output)
+    model =  Model(inputs=input_layer, outputs=output, name='generator')
 
     if not train_vgg16_layers:
         all_layers = {layer.name: layer for layer in model.layers}
-        for name, _ in layers.items():
+        for name, _ in all_layers.items():
             all_layers[name].trainable = False
         
     return model
@@ -100,7 +105,7 @@ def get_discriminator_model(input_shape, train_vgg16_layers=False):
     vgg16 = get_vgg16_model(input_shape, input_layer)
     vgg_layers = {layer.name: layer for layer in vgg16.layers}
 
-    block6_conv1 = Conv2D(filters=512, kernel_size=3, padding='same', activation='relu')(layers['block5_pool'].output)
+    block6_conv1 = Conv2D(filters=512, kernel_size=3, padding='same', activation='relu')(vgg_layers['block5_pool'].output)
     block6_conv2 = Conv2D(filters=512, kernel_size=3, padding='same', activation='relu')(block6_conv1)
     block6_conv3 = Conv2D(filters=512, kernel_size=3, padding='same', activation='relu')(block6_conv2)
     block6_pool = GlobalAveragePooling2D()(block6_conv3)
@@ -108,11 +113,11 @@ def get_discriminator_model(input_shape, train_vgg16_layers=False):
     fc1 = Dense(512, activation='relu')(block6_pool)
     output = Dense(1, activation='sigmoid')(block6_pool)
 
-    model = Model(inputs=input_layer, outputs=output)
+    model = Model(inputs=input_layer, outputs=output, name='discriminator')
 
     if not train_vgg16_layers:
         all_layers = {layer.name: layer for layer in model.layers}
-        for name, _ in layers.items():
+        for name, _ in all_layers.items():
             all_layers[name].trainable = False
 
     return model
@@ -132,6 +137,6 @@ def get_gan_model(input_shape, generator, discriminator):
     input_layer = get_input_layer(input_shape)
     generated_image = generator(input_layer)
     prediction = discriminator(generated_image)
-    model = Model(inputs=input_layer, outputs=[generated_image, prediction])
+    model = Model(inputs=input_layer, outputs=[generated_image, prediction], name='gan')
 
     return model
