@@ -1,6 +1,7 @@
 import sys
 import os
 import shutil
+import argparse
 import numpy as np
 
 from tqdm import tqdm
@@ -25,26 +26,24 @@ def load_data(raw_images_dir, img_size):
     dirs = os.listdir(raw_images_dir)
     for directory in dirs:
         print('Preprocessing {}:'.format(directory))
-        if os.path.exists(directory):
-            shutil.rmtree(directory)
-        os.mkdir(directory)
+        save_directory = os.path.join('data', directory)
+        if os.path.exists(save_directory):
+            shutil.rmtree(save_directory)
+        os.mkdir(save_directory)
         path = os.path.join(raw_images_dir, directory)
         files_list = os.listdir(path)
         for file_name in tqdm(files_list):
             img = crop_and_resize_image(Image.open(os.path.join(path, file_name)), img_size)
-            img.save(os.path.join(directory, file_name), 'jpeg')
+            img.save(os.path.join(save_directory, file_name), 'jpeg')
 
 
 if __name__ == "__main__":
-    files = os.listdir(os.getcwd())
-    if 'preprocess_data.py' not in files:
-        sys.exit('Please run the script with data directory as the root')
-    raw_images_dir = input('Enter path for raw images directory: ')
-    if raw_images_dir is None:
-        sys.exit('Invalid data entered')
-    if not os.path.exists(raw_images_dir):
-        sys.exit('Invalid path')
-    img_size = int(input('Enter image size to resize: '))
-    if img_size is None:
-        sys.exit('Invalid data entered')
+    parser = argparse.ArgumentParser()
+    parser.add_argument('-d', '--directory', help='Absolute path to directory of downloaded images. Should contain folders train, validation and test in it', type=str)
+    parser.add_argument('-s', '--size', help='Size of image. The images will be resized to a square so just one width should be entered. Default - 244', type=int)
+    args = parser.parse_args()
+    if not os.path.exists(args.directory):
+        raise ValueError('Invalid path to directory')
+    raw_images_dir = args.directory
+    img_size = args.size if args.size is not None else 244
     load_data(raw_images_dir, img_size)
