@@ -12,7 +12,7 @@ Dense = keras.layers.Dense
 GlobalAveragePooling2D = keras.layers.GlobalAveragePooling2D
 MaxPooling2D = keras.layers.MaxPool2D
 
-def get_vgg16_model(input_shape, input_layer):
+def get_vgg16_model(input_shape, input_layer=None):
     """Returns a pretrained VGG16 model without the top layers
     
     Arguments:
