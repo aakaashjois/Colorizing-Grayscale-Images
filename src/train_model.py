@@ -24,6 +24,17 @@ def perceptual_loss(y_true, y_pred):
     loss_model.trainable = False
     return keras.backend.mean(keras.backend.square(loss_model(y_true) - loss_model(y_pred)))
 
+def save_trail_images(truth, generated):
+    for index, images in enumerate(zip(truth, generated)):
+        truth_image, generated_image = images
+        truth_image = Image.fromarray(np.uint8(truth_image * 255))
+        truth_image = truth_image.convert('RGB')
+        truth_image.save('truth_' + str(index) + '.jpg', 'JPEG')
+        generated_image = Image.fromarray(np.uint8(generated_image * 255))
+        generated_image = generated_image.convert('RGB')
+        generated_image.save('generated_' + str(index) + '.jpg', 'JPEG')
+
+
 d.trainable = True
 d.compile(optimizer='adam', loss=wasserstein_loss)
 d.trainable = False
@@ -31,6 +42,10 @@ gan.compile(optimizer='adam', loss=[perceptual_loss, wasserstein_loss], loss_wei
 d.trainable = True
 
 train_paths = np.array(listdir('./data/train/'))
+
+# Reducing number of images to train
+train_paths = [:12000]
+
 _ = ['./data/train/'] * len(train_paths)
 train_paths = np.core.defchararray.add(_,  train_paths)
 
@@ -57,7 +72,7 @@ for i in tqdm(train_paths):
             x_train_noise.append(img_np_noise)
 
 stop = time.time()
-print(stop - start, flush=True)
+print('Loading data took {} seconds'.format(stop - start), flush=True)
 
 x_train = np.array(x_train)
 x_train_noise = np.array(x_train_noise)
@@ -70,28 +85,22 @@ batch_start_index = 0
 for e in tqdm(range(epochs)):
     # Seed the generator to shuffle ground truth and noise in the same manner
     # Shuffle once per epoch
-    seed = np.random.randint(10e5)
-    np.random.seed(seed)
-    np.random.shuffle(x_train)
-    np.random.seed(seed)
-    np.random.shuffle(x_train_noise)
-    
+    random_shuffle = np.random.permutation(len(x_train))
+    x_train = x_train[random_shuffle]
+    x_train_noise = x_train_noise[random_shuffle]
     d_losses = []
     gan_losses = []
     
     for s in range(steps):
-        # Seed the generator to randomly pick ground truth and noise in the same manner
-        seed = np.random.randint(10e5)
-        np.random.seed(seed)
-        x_train_batch = x_train[np.random.choice(len(x_train), size=batch_size)]
-        np.random.seed(seed)
-        x_train_noise_batch = x_train_noise[np.random.choice(len(x_train_noise), batch_size)]
-        np.random.seed()
+        random_idx = np.random.choice(len(x_train), size=batch_size)
+        x_train_batch = x_train[random_idx]
+        x_train_noise_batch = x_train_noise[random_idx]
         
         # Get fake color predictions from generator
         g_pred = g.predict(x_train_batch, batch_size=batch_size)
         
         for _ in range(5):
+            print('Train discriminator', flush=True)
             # Real and fake labels
             y_train_true = np.ones(batch_size)
             y_train_fake = np.zeros(batch_size)
@@ -101,20 +110,25 @@ for e in tqdm(range(epochs)):
             d_loss_fake = d.train_on_batch(g_pred, y_train_fake)
             d_losses.append(0.5 * (d_loss_true + d_loss_fake))
         
-        print('Epoch {} batch {} d_loss {}'.format(e, s, np.mean(d_losses)), flush=True)
+        print('Epoch {} - step {} - d_loss {}'.format(e, s, np.mean(d_losses)), flush=True)
         
         # Freeze discriminator because we want to train the GAN as a whole
         d.trainable = False
         
         # Train GAN so that the generator learns to generate better colors
+        print('Train generator', flush=True)
         gan_loss = gan.train_on_batch(x_train_noise_batch, [x_train_batch, y_true_train])
         gan_losses.append(gan_loss)
         
-        print('Epoch {} batch {} gan_loss {}'.format(e, s, np.mean(gan_losses)), flush=True)
+        print('Epoch {} - step {} - gan_loss {}'.format(e, s, np.mean(gan_losses)), flush=True)
         
         # Un-freeze discriminator
         d.trainable = True
-    
-g.save('./models/g.h5')
-d.save('./models/d.h5')
-gan.save('./models/gan.h5')
+
+    trail_truth_images = x_train[0:10]
+    trial_generated_images = g.predict(x_train_noise[0:10], batch_size=10)
+    save_trail_images(trail_truth_images, trial_generated_images)
+
+g.save('./models/g-{}e-{}.h5')
+d.save('./models/d-{}e-{}.h5.h5')
+gan.save('./models/gan-{}e-{}.h5.h5')
