@@ -63,7 +63,10 @@ x_train_noise = []
 for i in tqdm(train_paths):
     with Image.open(i) as img:
         img_np = np.array(img)
+        # Normalize the image
+        img_np = img_np - np.min(imp_np) / (np.max(img_np) - np.min(img_np))
         img_np_noise = np.copy(img_np)
+        # Use only the color images
         if len(img_np.shape) == 3:
             img_np_noise[:,:,1] = np.random.random(img_np.shape[:2])
             img_np_noise[:,:,2] = np.random.random(img_np.shape[:2])
@@ -77,9 +80,9 @@ print('Loading data took {} seconds'.format(stop - start), flush=True)
 x_train = np.array(x_train)
 x_train_noise = np.array(x_train_noise)
 
-epochs = 100
-steps = 1850
-batch_size = 64
+epochs = 10
+steps = 5
+batch_size = 256
 batch_start_index = 0
 
 for e in tqdm(range(epochs)):
