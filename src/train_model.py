@@ -24,15 +24,15 @@ def perceptual_loss(y_true, y_pred):
     loss_model.trainable = False
     return keras.backend.mean(keras.backend.square(loss_model(y_true) - loss_model(y_pred)))
 
-def save_trail_images(truth, generated):
+def save_trail_images(e, truth, generated):
     for index, images in enumerate(zip(truth, generated)):
         truth_image, generated_image = images
         truth_image = Image.fromarray(np.uint8(truth_image * 255))
         truth_image = truth_image.convert('RGB')
-        truth_image.save('truth_' + str(index) + '.jpg', 'JPEG')
+        truth_image.save('truth_' + str(index) + '_' + str(e)+ 'e.jpg', 'JPEG')
         generated_image = Image.fromarray(np.uint8(generated_image * 255))
         generated_image = generated_image.convert('RGB')
-        generated_image.save('generated_' + str(index) + '.jpg', 'JPEG')
+        generated_image.save('generated_' + str(index) + '_' + str(e)+ 'e.jpg', 'JPEG')
 
 
 d.trainable = True
@@ -44,7 +44,7 @@ d.trainable = True
 train_paths = np.array(listdir('./data/train/'))
 
 # Reducing number of images to train
-train_paths = [:12000]
+train_paths = train_paths[0:12000]
 
 _ = ['./data/train/'] * len(train_paths)
 train_paths = np.core.defchararray.add(_,  train_paths)
@@ -98,13 +98,13 @@ for e in tqdm(range(epochs)):
         
         # Get fake color predictions from generator
         g_pred = g.predict(x_train_batch, batch_size=batch_size)
-        
-        for _ in range(5):
-            print('Train discriminator', flush=True)
-            # Real and fake labels
-            y_train_true = np.ones(batch_size)
-            y_train_fake = np.zeros(batch_size)
-            
+
+        # Real and fake labels
+        y_train_true = np.ones(batch_size)
+        y_train_fake = np.zeros(batch_size)
+
+        print('Train discriminator', flush=True)
+        for _ in range(5):            
             # Real and fake losses; train discriminator on ground truth-true labels and noise-fake labels
             d_loss_true = d.train_on_batch(x_train_batch, y_train_true)
             d_loss_fake = d.train_on_batch(g_pred, y_train_fake)
@@ -117,7 +117,7 @@ for e in tqdm(range(epochs)):
         
         # Train GAN so that the generator learns to generate better colors
         print('Train generator', flush=True)
-        gan_loss = gan.train_on_batch(x_train_noise_batch, [x_train_batch, y_true_train])
+        gan_loss = gan.train_on_batch(x_train_noise_batch, [x_train_batch, y_train_true])
         gan_losses.append(gan_loss)
         
         print('Epoch {} - step {} - gan_loss {}'.format(e, s, np.mean(gan_losses)), flush=True)
@@ -127,7 +127,7 @@ for e in tqdm(range(epochs)):
 
     trail_truth_images = x_train[0:10]
     trial_generated_images = g.predict(x_train_noise[0:10], batch_size=10)
-    save_trail_images(trail_truth_images, trial_generated_images)
+    save_trail_images(e, trail_truth_images, trial_generated_images)
 
 g.save('./models/g-{}e-{}.h5')
 d.save('./models/d-{}e-{}.h5.h5')
