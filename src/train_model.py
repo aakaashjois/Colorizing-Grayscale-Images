@@ -8,6 +8,7 @@ import time
 
 keras = tf.keras
 Model = keras.models.Model
+Adam = keras.optimizer.Adam
 
 input_shape = (224, 224, 3)
 input_layer = create_model.get_input_layer(input_shape)
@@ -29,16 +30,18 @@ def save_trail_images(e, truth, generated):
         truth_image, generated_image = images
         truth_image = Image.fromarray(np.uint8(truth_image * 255))
         truth_image = truth_image.convert('RGB')
-        truth_image.save('truth_' + str(index) + '_' + str(e)+ 'e.jpg', 'JPEG')
+        truth_image.save('./images/truth_' + str(index) + '_' + str(e) + 'e.jpg', 'JPEG')
         generated_image = Image.fromarray(np.uint8(generated_image * 255))
         generated_image = generated_image.convert('RGB')
-        generated_image.save('generated_' + str(index) + '_' + str(e)+ 'e.jpg', 'JPEG')
+        generated_image.save('./images/generated_' + str(index) + '_' + str(e) + 'e.jpg', 'JPEG')
 
 
 d.trainable = True
-d.compile(optimizer='adam', loss=wasserstein_loss)
+d_opt = Adam(lr=1E-4, epsilon=1e-8)
+gan_opt = Adam(lr=1E-4, epsilon=1e-8)
+d.compile(optimizer=d_opt, loss=wasserstein_loss)
 d.trainable = False
-gan.compile(optimizer='adam', loss=[perceptual_loss, wasserstein_loss], loss_weights=[100, 1])
+gan.compile(optimizer=gan_opt, loss=[perceptual_loss, wasserstein_loss], loss_weights=[10, 1])
 d.trainable = True
 
 train_paths = np.array(listdir('./data/train/'))
@@ -64,7 +67,7 @@ for i in tqdm(train_paths):
     with Image.open(i) as img:
         img_np = np.array(img)
         # Normalize the image
-        img_np = img_np - np.min(imp_np) / (np.max(img_np) - np.min(img_np))
+        img_np = img_np - np.min(img_np) / (np.max(img_np) - np.min(img_np))
         img_np_noise = np.copy(img_np)
         # Use only the color images
         if len(img_np.shape) == 3:
@@ -85,6 +88,10 @@ steps = 5
 batch_size = 256
 batch_start_index = 0
 
+# Real and fake labels
+y_train_true = np.ones(batch_size)
+y_train_fake = np.zeros(batch_size)
+
 for e in tqdm(range(epochs)):
     # Seed the generator to shuffle ground truth and noise in the same manner
     # Shuffle once per epoch
@@ -102,12 +109,8 @@ for e in tqdm(range(epochs)):
         # Get fake color predictions from generator
         g_pred = g.predict(x_train_batch, batch_size=batch_size)
 
-        # Real and fake labels
-        y_train_true = np.ones(batch_size)
-        y_train_fake = np.zeros(batch_size)
-
         print('Train discriminator', flush=True)
-        for _ in range(5):            
+        for _ in range(1):            
             # Real and fake losses; train discriminator on ground truth-true labels and noise-fake labels
             d_loss_true = d.train_on_batch(x_train_batch, y_train_true)
             d_loss_fake = d.train_on_batch(g_pred, y_train_fake)
