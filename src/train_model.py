@@ -8,7 +8,9 @@ import time
 
 keras = tf.keras
 Model = keras.models.Model
-Adam = keras.optimizer.Adam
+Adam = keras.optimizers.Adam
+mean_squared_error = keras.losses.mean_squared_error
+binary_crossentropy = keras.losses.binary_crossentropy
 
 input_shape = (224, 224, 3)
 input_layer = create_model.get_input_layer(input_shape)
@@ -35,13 +37,21 @@ def save_trail_images(e, truth, generated):
         generated_image = generated_image.convert('RGB')
         generated_image.save('./images/generated_' + str(index) + '_' + str(e) + 'e.jpg', 'JPEG')
 
+def d_loss_fn(y_true, y_pred):
+    return binary_crossentropy(y_true, y_pred)
+
+def g_loss_fn(y_true, y_pred):
+    p_loss = perceptual_loss(y_true, y_pred)
+    mse_loss = mean_squared_error(y_true, y_pred)
+    return 10*p_loss + mse_loss
+
 
 d.trainable = True
 d_opt = Adam(lr=1E-4, epsilon=1e-8)
 gan_opt = Adam(lr=1E-4, epsilon=1e-8)
-d.compile(optimizer=d_opt, loss=wasserstein_loss)
+d.compile(optimizer=d_opt, loss=d_loss_fn)
 d.trainable = False
-gan.compile(optimizer=gan_opt, loss=[perceptual_loss, wasserstein_loss], loss_weights=[10, 1])
+gan.compile(optimizer=gan_opt, loss=[g_loss_fn, d_loss_fn])
 d.trainable = True
 
 train_paths = np.array(listdir('./data/train/'))
