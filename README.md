@@ -1,10 +1,13 @@
-# Unsupervised Fully Automatic Colorization of Grayscale Images using Generative Adversarial Networks (UFACGIGAN)
+# Colorizing grayscale images
 
 ## WHAT?
-Converting grayscale images to color using a DCGAN
+Convert grayscale image to a colored image using different deep learning techniques.
 
 ## HOW?
-We model the generator based on the architecture reported by Iizuka et al [\[1\]](#references). For the discriminator, we use the VGG19 model with `categorical_cross_entropy` loss function. We train the generator on Microsoft's COCO dataset [\[2\]](#references).
+We use 3 different models to try and colorize the grayscale image.
+1. Inception-VGG AutoEncoder
+2. VGG AutoEncoder
+3. GAN (Experimental)
 
 ## SETUP
 ### DATA PREP
