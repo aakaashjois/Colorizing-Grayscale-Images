@@ -1,7 +1,8 @@
 import numpy as np
 from keras.applications.inception_v3 import InceptionV3
 from keras.applications.vgg16 import VGG16
-from keras.layers import Input, Conv2D, RepeatVector, Reshape, Concatenate, UpSampling2D, Dropout, BatchNormalization
+from keras.layers import Input, Conv2D, RepeatVector, Reshape, Concatenate, UpSampling2D, Dropout, BatchNormalization, \
+    GlobalAveragePooling2D, Dense
 from keras.models import Model
 from keras.preprocessing.image import ImageDataGenerator
 from skimage.color import rgb2lab
@@ -141,6 +142,69 @@ class ModelUtils:
         deconv10 = Conv2D(128, kernel_size=3, padding='same', activation='relu')(deconv9)
         output = Conv2D(2, kernel_size=3, padding='same', activation='relu')(deconv10)
         return Model(inputs=input_tensor, outputs=output)
+
+    def get_gan_model(self):
+
+        def create_generator_model():
+            input_tensor = Input(shape=(224, 224, 1))
+            model_input = Concatenate(axis=3)([input_tensor, input_tensor, input_tensor])
+            vgg16 = self.__get_pretrained_model(model_type='vgg',
+                                                include_top=False,
+                                                freeze=True,
+                                                input_tensor=model_input)
+            upsample1 = UpSampling2D()(vgg16.output)
+            deconv1 = Conv2D(512, kernel_size=3, padding='same', activation='relu')(upsample1)
+            d1 = Dropout(0.2)(deconv1)
+            deconv2 = Conv2D(512, kernel_size=3, padding='same', activation='relu')(d1)
+            bn1 = BatchNormalization()(deconv2)
+
+            upsample2 = UpSampling2D()(bn1)
+            deconv3 = Conv2D(512, kernel_size=3, padding='same', activation='relu')(upsample2)
+            d2 = Dropout(0.2)(deconv3)
+            deconv4 = Conv2D(512, kernel_size=3, padding='same', activation='relu')(d2)
+            bn2 = BatchNormalization()(deconv4)
+
+            upsample3 = UpSampling2D()(bn2)
+            deconv5 = Conv2D(512, kernel_size=3, padding='same', activation='relu')(upsample3)
+            d3 = Dropout(0.2)(deconv5)
+            deconv6 = Conv2D(512, kernel_size=3, padding='same', activation='relu')(d3)
+            bn3 = BatchNormalization()(deconv6)
+
+            upsample4 = UpSampling2D()(bn3)
+            deconv7 = Conv2D(256, kernel_size=3, padding='same', activation='relu')(upsample4)
+            d4 = Dropout(0.2)(deconv7)
+            deconv8 = Conv2D(256, 3, padding='same', activation='relu')(deconv7)
+
+            upsample5 = UpSampling2D()(deconv8)
+            deconv9 = Conv2D(256, kernel_size=3, padding='same', activation='relu')(upsample5)
+            deconv10 = Conv2D(128, kernel_size=3, padding='same', activation='relu')(deconv9)
+            output = Conv2D(2, kernel_size=3, padding='same', activation='relu')(deconv10)
+            return Model(inputs=input_tensor, outputs=output)
+
+        def create_discriminator_model():
+            input_l = Input(shape=(224, 224, 1))
+            input_ab = Input(shape=(224, 224, 2))
+            model_input = Concatenate(axis=3)([input_l, input_ab])
+            inception = self.__get_pretrained_model(model_type='inception',
+                                                    include_top=False,
+                                                    freeze=True,
+                                                    input_tensor=model_input)
+            global_average_pool = GlobalAveragePooling2D()(inception.get_layer(name='mixed10').output)
+            dense1 = Dense(units=512, activation='relu')(global_average_pool)
+            dense2 = Dense(units=128, activation='relu')(dense1)
+            output = Dense(units=1, activation='sigmoid')(dense2)
+            return Model(inputs=[input_l, input_ab], outputs=output)
+
+        def create_gan_model(input_tensor, generator, discriminator):
+            generated_images = generator(inputs=input_tensor)
+            predicted_labels = discriminator(inputs=[input_tensor, generated_images])
+            return Model(inputs=input_tensor, outputs=[generated_images, predicted_labels])
+
+        input_tensor = Input(shape=(224, 224, 1))
+        generator_model = create_generator_model()
+        discriminator_model = create_discriminator_model()
+        gan_model = create_gan_model(input_tensor, generator_model, discriminator_model)
+        return generator_model, discriminator_model, gan_model
 
 
 class DatasetUtils:
