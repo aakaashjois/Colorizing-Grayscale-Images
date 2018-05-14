@@ -1,12 +1,13 @@
 import os
+
 import numpy as np
 from keras.models import load_model
 from keras.preprocessing.image import img_to_array, load_img
 from skimage.color import rgb2lab, lab2rgb
 from skimage.io import imsave
 
-path_to_model = '' # Update path before running
-path_to_results = '' # Update path before running
+path_to_model = ''  # Update path before running
+path_to_results = ''  # Update path before running
 
 test_images = []
 for test_path in os.listdir(path='../data/test/'):

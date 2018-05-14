@@ -9,7 +9,22 @@ from skimage.color import rgb2lab
 
 
 class ModelUtils:
+    """
+    This class is a repository of all the utilities required to create the Keras models.
+    """
+
     def __get_pretrained_model(self, model_type, include_top, freeze, input_tensor):
+        """
+        Get a pretrained "Inceptionv3" or "VGG16" model trained on "ImageNet".
+        Args:
+            model_type (str): ("vgg" or "inception") Pick the model which should be returned
+            include_top (bool): Whether to load the top layers of the model
+            freeze (bool): Freeze the model before returning it
+            input_tensor (tensorflow.python.framework.ops.Tensor): Input tensor for the model
+
+        Returns:
+            keras.engine.training.Model
+        """
         if model_type == 'inception':
             model = InceptionV3(weights='imagenet',
                                 include_top=include_top,
@@ -28,6 +43,11 @@ class ModelUtils:
         return model
 
     def get_deep_koalarization_model(self):
+        """
+        Creates the model proposed in the Deep Koalarization paper.
+        Returns:
+            keras.engine.training.Model
+        """
         model_input = Input(shape=(224, 224, 1))
         encoder_output = Conv2D(64, 3, activation='relu', padding='same', strides=2)(model_input)
         encoder_output = Conv2D(128, 3, activation='relu', padding='same')(encoder_output)
@@ -61,6 +81,11 @@ class ModelUtils:
         return Model(inputs=model_input, outputs=decoder_output)
 
     def get_inception_vgg_autoencoder(self):
+        """
+        Creates a model based on Inceptionv3 and VGG16 pretrained on "ImageNet".
+        Returns:
+            keras.engine.training.Model
+        """
         input_tensor = Input(shape=(224, 224, 1))
         model_input = Concatenate(axis=3)([input_tensor, input_tensor, input_tensor])
         inception = self.__get_pretrained_model(model_type='inception',
@@ -107,6 +132,11 @@ class ModelUtils:
         return Model(inputs=input_tensor, outputs=output)
 
     def get_vgg_autoencoder_model(self):
+        """
+        Creates a model based on VGG16 pretrained on "ImageNet".
+        Returns:
+            keras.engine.training.Model
+        """
         input_tensor = Input(shape=(224, 224, 1))
         model_input = Concatenate(axis=3)([input_tensor, input_tensor, input_tensor])
         vgg16 = self.__get_pretrained_model(model_type='vgg',
@@ -144,8 +174,18 @@ class ModelUtils:
         return Model(inputs=input_tensor, outputs=output)
 
     def get_gan_model(self):
+        """
+        Creates a GAN model based on VGG16 and Inceptionv3.
+        Returns:
+            (keras.engine.training.Model, keras.engine.training.Model, keras.engine.training.Model)
+        """
 
         def create_generator_model():
+            """
+            Creates a generator model for the GAN based on VGG16.
+            Returns:
+                keras.engine.training.Model
+            """
             input_tensor = Input(shape=(224, 224, 1))
             model_input = Concatenate(axis=3)([input_tensor, input_tensor, input_tensor])
             vgg16 = self.__get_pretrained_model(model_type='vgg',
@@ -182,6 +222,11 @@ class ModelUtils:
             return Model(inputs=input_tensor, outputs=output)
 
         def create_discriminator_model():
+            """
+            Creates a model for the GAN based on Inceptionv3.
+            Returns:
+                keras.engine.training.Model
+            """
             input_l = Input(shape=(224, 224, 1))
             input_ab = Input(shape=(224, 224, 2))
             model_input = Concatenate(axis=3)([input_l, input_ab])
@@ -195,23 +240,34 @@ class ModelUtils:
             output = Dense(units=1, activation='sigmoid')(dense2)
             return Model(inputs=[input_l, input_ab], outputs=output)
 
-        def create_gan_model(input_tensor, generator, discriminator):
-            generated_images = generator(inputs=input_tensor)
-            predicted_labels = discriminator(inputs=[input_tensor, generated_images])
-            return Model(inputs=input_tensor, outputs=[generated_images, predicted_labels])
-
         input_tensor = Input(shape=(224, 224, 1))
         generator_model = create_generator_model()
         discriminator_model = create_discriminator_model()
-        gan_model = create_gan_model(input_tensor, generator_model, discriminator_model)
-        return generator_model, discriminator_model, gan_model
+        generated_images = generator_model(inputs=input_tensor)
+        predicted_labels = discriminator_model(inputs=[input_tensor, generated_images])
+        return Model(inputs=input_tensor, outputs=[generated_images, predicted_labels])
 
 
 class DatasetUtils:
+    """
+    This class is a repository of all the utilities required to read the dataset.
+    """
     def __init__(self):
+        """
+        Use Keras ImageDataGenerator class to create a generator function.
+        """
         self.image_generator = ImageDataGenerator()
 
     def get_image_generator(self, generator_type, batch_size):
+        """
+        Creates an image generator function using ImageDataGenerator from Keras.
+        Args:
+            generator_type: ("train", "validation", or "test") The folder from which data is processed
+            batch_size: The total number of images which should be returned
+
+        Returns:
+            (numpy.ndarray, numpy.ndarray)
+        """
         if generator_type == 'train':
             path = '../data/train'
         elif generator_type == 'validation':
